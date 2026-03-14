@@ -1,4 +1,6 @@
-import react from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardAction } from '@/components/ui/card';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
 
 const Dashboard = () => {
     const transactions = [
@@ -55,100 +57,103 @@ const Dashboard = () => {
                     <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
                         Financial Overview
                     </h1>
-                    <p className='text-slate-500 mt-2'>
-                        Manage your income and expenses based on your DB schema.
-                    </p>
                 </div>
-                <button className="bg-white border border-slate-200 px-4 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 shadow-sm transition-all">
+                <Button variant='outline' size="lg">
                     Generate Report
-                </button>
+                </Button>
             </header>
 
             {/* stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                        Total Balance
-                    </p>
-                    <p className={`text-3xl font-black mt-2 ${balance >= 0 ? 'text-indigo-600' : 'text-rose-600'}`}>
-                        ${balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                    </p>
-                </div>
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Total Balance</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <CardContent>
+                            <p className={`text-3xl font-black ${balance >= 0 ? 'text-primary' : 'text-destructive'}`}>
+                                ${balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            </p>
+                        </CardContent>
+                    </CardContent>
+                </Card>
 
-                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-emerald-500">
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                        Income
-                    </p>
-                    <p className="text-3xl font-black mt-2 text-slate-900">
-                        ${totalIncome.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                    </p>
-                </div>
+                <Card >
+                    <CardHeader>
+                        <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                            Income
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-3xl font-black text-foreground">
+                            ${totalIncome.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </p>
+                    </CardContent>
+                </Card>
 
-                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-rose-500">
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                        Expenses
-                    </p>
-
-                    <p className="text-3xl font-black mt-2 text-slate-900">
-                        ${totalExpense.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                    </p>
-                </div>
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                            Expenses
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-3xl font-black text-foreground">
+                            ${totalExpense.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </p>
+                    </CardContent>
+                </Card>
             </div>
 
             {/* Transactions table */}
 
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                <div className="px-6 py-5 border-b border-slate-200 flex justify-between items-center bg-white">
-                    <h2 className="font-bold text-slate-900 text-lg">
+            <Card>
+                <CardHeader className="flex-row items-center justify-between">
+                    <CardTitle className="text-lg font-bold">
                         Recent Transactions
-                    </h2>
-                    <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-indigo-700 transition-colors shadow-md">
-                        + New Transaction
-                    </button>
-                </div>
+                    </CardTitle>
+                    <CardAction>
+                        <Button size='lg'>
+                            + New Transaction
+                        </Button>
+                    </CardAction>
+                </CardHeader>
 
-                <div className='overflow-x-auto'>
-                    <table className="w-full text-left">
-                        <thead className="bg-slate-50/50 border-b border-slate-200">
-                            <tr>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Description</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Category</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Date</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Amount</th>
-                            </tr>
-                        </thead>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Description</TableHead>
+                                <TableHead>Category</TableHead>
+                                <TableHead>Date</TableHead>
+                                <TableHead className="text-right">Amount</TableHead>
+                            </TableRow>
+                        </TableHeader>
 
-                        <tbody className="divide-y divide-slate-100">
+                        <TableBody>
                             {transactions.map((t) => (
-                                <tr key={t._id} className="hover:bg-slate-50/80 transition-all group">
-                                    {/* 1. Description column (Was missing!) */}
-                                    <td className="px-6 py-4">
-                                        <div className="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">
-                                            {t.description}
-                                        </div>
-                                    </td>
-                                    {/* 2. Category column */}
-                                    <td className="px-6 py-4">
-                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800 capitalize">
+                                <TableRow key={t._id}>
+                                    <TableCell className="font-semibold">
+                                        {t.description}
+                                    </TableCell>
+                                    <TableCell>
+                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary text-secondary-foreground capitalize">
                                             {t.category}
                                         </span>
-                                    </td>
-                                    {/* 3. Date column */}
-                                    <td className="px-6 py-4 text-slate-500 text-sm">
+                                    </TableCell>
+                                    <TableCell className="text-muted-foreground">
                                         {new Date(t.date).toLocaleDateString()}
-                                    </td>
-                                    {/* 4. Amount column */}
-                                    <td className={`px-6 py-4 font-bold text-right ${t.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                    </TableCell>
+                                    <TableCell className={`font-bold text-right ${t.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}`}>
                                         {t.type === 'income' ? '+' : '-'}${t.amount.toFixed(2)}
-                                    </td>
-                                </tr>
+                                    </TableCell>
+
+                                </TableRow>
                             ))}
-                        </tbody>
-                    </table>
-
-                </div>
-
-            </div>
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
         </div>
     )
 }

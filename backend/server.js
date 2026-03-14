@@ -1,9 +1,9 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import connectDb from './backend/config/database.config.js';
-import authRoutes from './backend/routes/auth.routes.js';
-import expenseRoutes from './backend/routes/expense.routes.js';
-import { globalErrorHandler } from './backend/middleware/error.middleware.js';
+import connectDb from './config/database.config.js';
+import authRoutes from './routes/auth.routes.js';
+import expenseRoutes from './routes/expense.routes.js';
+import { globalErrorHandler } from './middleware/error.middleware.js';
 // import mongoSanitize from 'express-mongo-sanitize';
 // import helmet from 'helmet';
 
