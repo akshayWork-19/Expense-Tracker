@@ -133,4 +133,4 @@ expense_tracker/
 
 ---
 
-Developed with ❤️ by [Akshaykumar](https://github.com/Akshaykumar1904)
+Developed with ❤️ by [Akshaykumar](https://github.com/akshayWork-19)
