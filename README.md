@@ -17,10 +17,12 @@ A modern **MERN stack** application (MongoDB, Express, React, Node) for managing
 
 ### **Frontend (UI)**
 - **Tailwind V4**: Utilizing the latest CSS-first configuration and high-performance styling.
-- **Shadcn UI**: Premium, accessible components (Buttons, Cards, Tables) for a professional look.
-- **Responsive Navigation**: Mobile-first navigation with an Indigo-themed app shell.
-- **Real-time Stats**: Automatic calculation of Balance, Total Income, and Total Expenses.
-- **Schema Alignment**: Seamless integration with the MongoDB `Expense` model.
+- **Shadcn UI**: Premium, accessible components (Buttons, Cards, Tables, Dialogs, Selects).
+- **Dark Mode**: Soft-dark interface implemented for reduced eye strain and a premium aesthetic.
+- **Interactive Data Visualization**: Integrated **Recharts** for real-time Pie charts (Category breakdown) and Area charts (Spending trends).
+- **Sleek Feedback**: Real-time toast notifications with **Sonner** (Monochrome professional style).
+- **Dynamic Filtering**: Robust dashboard logic to filter views by category and type without losing global stats.
+
 
 ---
 
@@ -30,27 +32,25 @@ A modern **MERN stack** application (MongoDB, Express, React, Node) for managing
 - Backend REST API with full CRUD for expenses and user authentication
 - Mongoose models for `User` and `Expense` with validation
 - JWT-based auth with middleware protection on routes
-- Global error handling middleware
-- Frontend scaffolded with Vite 7 + React 19
-- Tailwind CSS V4 integrated via `@tailwindcss/vite` plugin
-- Shadcn/ui (Mira preset) initialized with `Button`, `Card`, `Input`, `Label`, `Table` components
-- Auth pages (Login, Register) built with shadcn components
-- Dashboard with gradient stat cards and transaction table
-- Axios service with JWT interceptor (`api.js`)
-- AuthContext with `login`, `register`, `logout` and auto-rehydration from token
+- Frontend scaffolded with Vite 7 + React 19 + Tailwind V4
+- AuthContext with `login`, `register`, `logout` and auto-rehydration
+- Full-stack Dashboard integration with real API data
+- Add/Edit Transaction modal (shadcn `Dialog`)
+- Interactive **Recharts** (Category Pie Chart & Trend Area Chart)
+- Custom-styled **Sonner** Toast Notifications
+- **Dark Mode** implementation for the entire dashboard
+- Isolated filtering logic for Category and Income/Expense types
 
 ### 🚧 In Progress
-- Connect Login/Register pages to backend API via `AuthContext`
-- Fetch real transaction data in Dashboard from `/api/expense`
-- Wire "New Transaction" button to create expenses
+- Improving Dashboard pagination for large datasets
+- Refining client-side form validation UX
 
-### 📌 Planned
-- Add/Edit Transaction modal (shadcn `Dialog`)
-- Category filter and date range picker
-- Charts/Graphs for spending visualization (e.g., `recharts`)
-- Toast notifications (shadcn `Sonner`)
-- Dark mode toggle
-- CSV export from the frontend
+### 📌 Planned (Open Source Roadmap)
+- **Phase 3**: Recurring Transactions (Monthly/Weekly bills)
+- **Phase 4**: Multi-Currency support & User Settings
+- **Phase 5**: **AI Smart-Insights** (Analyze spending patterns using AI summaries)
+- **OSS Prep**: API Documentation (Swagger), Docker Compose, and unit testing suite.
+
 
 ---
 
