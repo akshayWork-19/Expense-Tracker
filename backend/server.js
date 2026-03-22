@@ -1,6 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import connectDb from './config/database.config.js';
+import cors from "cors";
 import authRoutes from './routes/auth.routes.js';
 import expenseRoutes from './routes/expense.routes.js';
 import { globalErrorHandler } from './middleware/error.middleware.js';
@@ -14,8 +15,7 @@ connectDb();
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// app.use(helmet());
-// app.use(mongoSanitize());
+app.use(cors());
 app.use(express.json());
 
 

@@ -3,13 +3,29 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../co
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
 
 const Login = ({ onLogin, onSwitchToRegister }) => {
     const [formData, setFormData] = useState({ email: '', password: '' });
-    const handleSubmit = (e) => {
+    const [isLoading, setIsLoading] = useState(false);
+    const { login } = useAuth();
+    const [error, setError] = useState('');
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Logging in with:', formData);
-        onLogin();
+        setError('');
+        setIsLoading(true);
+        try {
+            await login(formData.email, formData.password);
+            toast.success('Welcome back!')
+        } catch (error) {
+            const errorMessage = error.response?.data?.message || "Login failed. Please try again.";
+            setError(errorMessage);
+            toast.error(errorMessage);
+        } finally {
+            setIsLoading(false);
+        }
     }
 
     return (
@@ -29,6 +45,11 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
                 </CardHeader>
 
                 <CardContent>
+                    {
+                        error && (
+                            <div className="mb-4 p-3 bg-destructive/10 text-destructive text-sm rounded-md">{error}</div>
+                        )
+                    }
                     <form onSubmit={handleSubmit} className='space-y-6 text-slate-800'>
                         <div className="space-y-2">
                             <Label htmlFor="email">Email</Label>
@@ -41,8 +62,8 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
                             </Input>
                         </div>
 
-                        <Button type="submit" className="w-full bg-slate-800 hover:bg-slate-700" size='lg'>
-                            Sign In
+                        <Button type="submit" className="w-full bg-slate-800 hover:bg-slate-700" size='lg' disabled={isLoading}>
+                            {isLoading ? 'Signing in...' : 'Sign In'}
                         </Button>
                     </form>
 

@@ -3,14 +3,33 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../co
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
+
 
 
 const Register = ({ onRegister, onSwitchToLogin }) => {
     const [formData, setFormData] = useState({ email: '', password: '', username: '' });
-    const handleSubmit = (e) => {
+    const { register } = useAuth();
+    const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+
+
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Logging in with:', formData);
-        onRegister();
+        setError('');
+        setIsLoading(true);
+        try {
+            await register(formData);
+            toast.success("Thank you for joining !");
+        } catch (error) {
+            const errorMessage = error.response?.data?.message || 'Registration failed. Please try again.';
+            setError(errorMessage);
+            toast.error(errorMessage);
+        } finally {
+            setIsLoading(false);
+        }
     }
 
     return (
@@ -30,6 +49,11 @@ const Register = ({ onRegister, onSwitchToLogin }) => {
                 </CardHeader>
 
                 <CardContent>
+                    {
+                        error && (
+                            <div className="mb-4 p-3 bg-destructive/10 text-destructive text-sm rounded-md">{error}</div>
+                        )
+                    }
                     <form onSubmit={handleSubmit} className='space-y-6 text-slate-800'>
                         <div className="space-y-2">
                             <Label htmlFor="username">Username</Label>
@@ -46,8 +70,8 @@ const Register = ({ onRegister, onSwitchToLogin }) => {
                             <Input id="password" type="password" required placeholder="********" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} >
                             </Input>
                         </div>
-                        <Button type="submit" className="w-full bg-slate-800 hover:bg-slate-700" size='lg'>
-                            Register
+                        <Button type="submit" className="w-full bg-slate-800 hover:bg-slate-700" size='lg' disabled={isLoading}>
+                            {isLoading ? 'Creating Account...' : 'Register'}
                         </Button>
                     </form>
 

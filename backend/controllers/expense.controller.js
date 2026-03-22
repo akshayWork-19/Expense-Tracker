@@ -339,12 +339,12 @@ const exportAsCSV = async (req, res) => {
     .sort({ date: -1 })
     .lean();
   const header = "date,type,category,description,amount,currency\n";
-  const rows = expenses.map((e)=>
-  `${new Date(e.date).toISOString()},${e.type},${e.category},"${e.description}",${e.amount},${e.currency}`
+  const rows = expenses.map((e) =>
+    `${new Date(e.date).toISOString()},${e.type},${e.category},"${e.description}",${e.amount},${e.currency}`
   ).join("\n");
-  res.setHeader("Content-Type","text/csv");
-  res.setHeader("Content-Disposition","attachment;filename=expenses.csv");
-  res.send(header+rows);
+  res.setHeader("Content-Type", "text/csv");
+  res.setHeader("Content-Disposition", "attachment;filename=expenses.csv");
+  res.send(header + rows);
 }
 
 
