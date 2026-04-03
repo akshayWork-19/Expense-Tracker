@@ -196,6 +196,32 @@ const changePassword = async (req, res) => {
   res.status(200).json({
     message: "password is now changed/updated successfullly! "
   });
+}
+
+const getAllUsers = async (req, res) => {
+  const users = await User.find().select('-password');
+  return res.status(200).json({
+    message: "Users retrieved successfully",
+    data: users
+  })
+};
+
+const updateUserRoleAndStatus = async (req, res) => {
+  const { role, status } = req.body;
+  const targetUserId = req.params.id;
+
+  if (targetUserId === req.user._id.toString()) {
+    throw new Error("Self-modification of role or status is not allowed for Admins.!")
+  }
+  const user = await User.findByIdAndUpdate(targetUserId, { role, status }, { new: true, runValidators: true }).select('-password');
+  if (!user) {
+    throw new NotFoundError('User not found!');
+  }
+
+  return res.status(200).json({
+    message: "User privileges updated successfully!",
+    data: user
+  })
 
 }
 
@@ -204,5 +230,7 @@ export {
   login,
   userProfile,
   updateProfile,
-  changePassword
+  changePassword,
+  getAllUsers,
+  updateUserRoleAndStatus
 }

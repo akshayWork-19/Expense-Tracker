@@ -7,33 +7,101 @@ import AddTransactionDialog from "../components/AddTransactionDialog";
 import CategoryPieChart from '@/components/CategoryPieChart';
 import TrendsChart from '@/components/TrendsChart';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, } from '@/components/ui/select';
+// import { Input } from '@/components/ui/input';
+import { format } from "date-fns";
+import { Calendar as CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { buttonVariants } from '@/components/ui/button';
+import { toast } from 'sonner';
+
 
 const Dashboard = () => {
     const [transactions, setTransactions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [filters, setFilters] = useState({ type: '', category: '' });
+    const [filters, setFilters] = useState({
+        type: '', category: '', from: '',
+        to: ''
+    });
+    const [openFrom, setOpenFrom] = useState(false);
+    const [openTo, setOpenTo] = useState(false);
 
+    const [globalSummary, setGlobalSummary] = useState(null);
+    const [categorySummary, setCategorySummary] = useState([]);
 
-    const fetchTransactions = useCallback(async () => {
+    const refreshData = useCallback(async () => {
+        await Promise.all([
+            fetchGlobalData(),
+            fetchFilteredTransactions(),
+        ])
+    })
+
+    const fetchGlobalData = async () => {
         try {
             setLoading(true);
+            const [sumRes, catRes] = await Promise.all([api.get('/expense/getSummary'), api.get('/expense/getCategoryBreakdown?type=expense')]);
+            setGlobalSummary(sumRes.data.summary);
+            setCategorySummary(catRes.data.data);
+            setError('')
+        } catch (error) {
+            console.error("Failed to load global stats", error);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    const fetchFilteredTransactions = useCallback(async () => {
+        try {
             let url = '/expense/allExpenses?limit=100';
             if (filters.type) url += `&type=${filters.type}`;
             if (filters.category) url += `&category=${filters.category}`;
+            if (filters.from) url += `&from=${filters.from}`;
+            if (filters.to) url += `&to=${filters.to}`;
+
             const res = await api.get(url);
             setTransactions(res.data.data);
-        } catch (err) {
-            setError(err.response?.data?.message || 'Failed to load transactions');
-        } finally {
-            setLoading(false);
+
+        } catch (error) {
+            setError(error.response?.data?.message || 'failed to load transactions')
         }
     }, [filters]);
 
     useEffect(() => {
-        fetchTransactions();
-    }, [fetchTransactions])
+        fetchGlobalData();
+    }, []);
+
+    useEffect(() => {
+        fetchFilteredTransactions();
+    }, [fetchFilteredTransactions]);
+
+
+    const handleExportCSV = async () => {
+        try {
+            let url = '/expense/export/csv?';
+            if (filters.type) url += `type=${filters.type}&`;
+            if (filters.category) url += `category=${filters.category}&`;
+            if (filters.from) url += `from=${filters.from}&`;
+            if (filters.to) url += `to=${filters.to}&`;
+            const response = await api.get(url, {
+                responseType: 'blob'
+            })
+            const blobUrl = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.setAttribute('download', `expenses_${new Date().toLocaleDateString()}.csv`);
+            document.body.appendChild(link);
+            link.click();
+
+            link.parentNode.removeChild(link);
+            window.URL.revokeObjectURL(blobUrl);
+            toast.success('Exporting your data...');
+        } catch (error) {
+            toast.error("Failed to export data")
+        }
+    }
 
 
     const totalIncome = transactions.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
@@ -68,8 +136,8 @@ const Dashboard = () => {
                     </CardHeader>
                     <CardContent>
                         <CardContent>
-                            <p className={`text-3xl font-black ${balance >= 0 ? 'text-primary' : 'text-destructive'}`}>
-                                ${balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            <p className={`text-3xl font-black ${globalSummary?.net || 0 ? 'text-primary' : 'text-destructive'}`}>
+                                ${globalSummary?.net?.toFixed(2) || "0.00"}
                             </p>
                         </CardContent>
                     </CardContent>
@@ -107,7 +175,7 @@ const Dashboard = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
                 <div className="lg:col-span-1 min-w-0">
-                    <CategoryPieChart transactions={transactions} />
+                    <CategoryPieChart categoryData={categorySummary} />
                 </div>
 
 
@@ -142,11 +210,66 @@ const Dashboard = () => {
                                 ))}
                             </SelectContent>
                         </Select>
-                        {(filters.type || filters.category) && (
-                            <Button variant="ghost" onClick={() => setFilters({ type: '', category: '' })} className="text-xs">
+                        <div className="flex items-center gap-2">
+                            <Popover open={openFrom} onOpenChange={setOpenFrom}>
+                                <PopoverTrigger className={cn(buttonVariants({ variant: "outline" }),
+                                    "w-[160px] justify-start text-left font-normal",
+                                    !filters.from && "text-muted-foreground")}>
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {
+                                        filters.from ? format(new Date(filters.from), "PPP") : <span>
+                                            From date
+                                        </span>
+                                    }
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+
+                                    <Calendar
+                                        mode="single"
+                                        selected={filters.from ? new Date(filters.from) : undefined}
+                                        onSelect={(date) => {
+                                            setFilters(p => ({ ...p, from: date ? date.toISOString() : '' }));
+                                            setOpenFrom(false);
+                                        }}
+                                        initialFocus
+                                    />
+                                </PopoverContent>
+                            </Popover>
+
+
+                            <span className="text-muted-foreground">-</span>
+
+                            <Popover open={openTo} onOpenChange={setOpenTo}>
+                                <PopoverTrigger className={cn(buttonVariants({ variant: "outline" }),
+                                    "w-[160px] justify-start text-left font-normal",
+                                    !filters.to && "text-muted-foreground"
+                                )}>
+                                    <CalendarIcon className='mr-2 h-4 w-4' />
+                                    {filters.to ? format(new Date(filters.to), "PPP") : <span>To date</span>}
+                                </PopoverTrigger>
+
+                                <PopoverContent className="w-auto p-0" align="start">
+
+                                    <Calendar
+                                        mode="single"
+                                        selected={filters.to ? new Date(filters.to) : undefined}
+                                        onSelect={(date) => {
+                                            setFilters(p => ({ ...p, to: date ? date.toISOString() : '' }));
+                                            setOpenTo(false);
+                                        }}
+                                        initialFocus
+                                    />
+                                </PopoverContent>
+                            </Popover>
+
+                        </div>
+                        {(filters.type || filters.category || filters.from || filters.to) && (
+                            <Button variant="ghost" onClick={() => setFilters({ type: '', category: '', from: '', to: '' })} className="text-xs">
                                 Clear Filters
                             </Button>
                         )}
+
+
 
                     </div>
 
@@ -156,8 +279,22 @@ const Dashboard = () => {
                             <CardTitle className="text-lg font-bold">
                                 Recent Transactions
                             </CardTitle>
+                            {(filters.type || filters.category || filters.from || filters.to) && (
+                                <p className="text-sm text-muted-foreground mt-1">
+                                    Total for <span className="font-bold text-foreground capitalize">
+                                        {filters.type || filters.category || 'Filtered Results'}
+                                    </span>:
+                                    <span className="ml-1 font-bold text-foreground">
+                                        ${transactions.reduce((acc, t) => acc + t.amount, 0).toFixed(2)}
+                                    </span>
+                                </p>
+                            )}
+
                             <CardAction>
-                                <Button size='lg' onClick={() => setIsDialogOpen(true)}>
+                                <Button variant="outline" size="lg" className='mr-4' onClick={handleExportCSV}>
+                                    Export CSV
+                                </Button>
+                                <Button onClick={() => setIsDialogOpen(true)}>
                                     + New Transaction
                                 </Button>
                             </CardAction>
@@ -201,8 +338,8 @@ const Dashboard = () => {
                 </div>
             </div>
 
-            <AddTransactionDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} onSuccess={fetchTransactions} />
-        </div>
+            <AddTransactionDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} onSuccess={refreshData} />
+        </div >
     )
 }
 

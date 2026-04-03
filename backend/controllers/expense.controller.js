@@ -7,7 +7,8 @@ const toObjectId = (id) => new mongoose.Types.ObjectId(id);
 const createExpense = async (req, res) => {
   // console.log(req.body)
   //   console.log('here')
-  const { amount, description, date, type, category, tags, note, currency } = req.body;
+  const { amount, description, date, type, category, tags, note, currency, isRecurring, recurringInterval } = req.body;
+
   const userId = req.user._id;
 
   if (!userId) {
@@ -35,8 +36,11 @@ const createExpense = async (req, res) => {
     category: category,
     note: note,
     tags: tags,
-    currency: currency
+    currency: currency,
+    isRecurring: isRecurring || false,
+    recurringInterval: recurringInterval || null
   });
+
 
   await expense.save();
 
@@ -56,11 +60,22 @@ const allExpenses = async (req, res) => {
     throw new AuthorizationError('invalid userId!');
   }
 
-  const { type, category, page = 1, limit = 10 } = req.query;
+  const { type, category, page = 1, limit = 10, from, to } = req.query;
 
-  const queryObj = { userId };
+  const queryObj = {};
+  if (req.user.role === 'Viewer') {
+    queryObj.userId = req.user._id;
+  }
+  // const queryObj = { userId };
   if (type) queryObj.type = type;
   if (category) queryObj.category = category;
+
+  if (from || to) {
+    queryObj.date = {};
+    if (from) queryObj.date.$gte = new Date(from);
+    if (to) queryObj.date.$lte = new Date(to);
+  }
+
 
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
@@ -95,11 +110,9 @@ const updateExpense = async (req, res) => {
   if (!expenseId || !userId) {
     throw new AuthorizationError("expenseID & userID are required")
   }
+  const query = req.user.role === 'Admin' ? { _id: expenseId } : { _id: expenseId, userId: req.user._id };
 
-  const currentExpense = await Expense.findOne({
-    _id: expenseId,
-    userId: userId
-  });
+  const currentExpense = await Expense.findOne(query);
   // console.log(currentExpense);
 
   if (!currentExpense) {
@@ -116,8 +129,11 @@ const updateExpense = async (req, res) => {
       category: category || currentExpense.category,
       note: note || currentExpense.note,
       tags: tags || currentExpense.tags,
-      currency: currency || currentExpense.currency
+      currency: currency || currentExpense.currency,
+      isRecurring: isRecurring !== undefined ? isRecurring : currentExpense.isRecurring,
+      recurringInterval: recurringInterval !== undefined ? recurringInterval : currentExpense.recurringInterval
     },
+
     { new: true, runValidators: true }
   );
 
@@ -139,11 +155,9 @@ const deleteExpense = async (req, res) => {
   if (!userId || !expenseId) {
     throw new AuthorizationError('userID and expenseID required!')
   }
+  const query = req.user.role === 'Admin' ? { _id: expenseId } : { _id: expenseId, userId: req.user._id };
 
-  const expenseToDelete = await Expense.findOneAndDelete({
-    _id: expenseId,
-    userId: userId,
-  });
+  const expenseToDelete = await Expense.findOneAndDelete(query);
   console.log(expenseToDelete);
 
   if (!expenseToDelete) {
@@ -159,10 +173,10 @@ const deleteExpense = async (req, res) => {
 
 const bulkDelete = async (req, res) => {
   const { ids } = req.body;
-  const result = await Expense.deleteMany({
-    _id: { $in: ids.map(toObjectId) },
-    userId: req.user._id,  //scoped to user
-  });
+
+  const query = req.user.role === 'Admin' ? { _id: { $in: ids.map(toObjectId) } } : { _id: { $in: ids.map(toObjectId) }, userId: req.user._id };
+
+  const result = await Expense.deleteMany(query);
   res.status(200).json({
     success: true,
     message: "Trasactions deleted Successfully",
@@ -171,8 +185,9 @@ const bulkDelete = async (req, res) => {
 }
 
 const getSummary = async (req, res) => {
+  const matchCondition = req.user.role === 'Viewer' ? { userId: toObjectId(req.user._id) } : {};
   const result = await Expense.aggregate([
-    { $match: { userId: toObjectId(req.user._id) } },
+    { $match: matchCondition },
     {
       $group: {
         _id: "$type",
@@ -198,9 +213,10 @@ const getSummary = async (req, res) => {
 
 const getCategoryBreakdown = async (req, res) => {
   const { type = "expense" } = req.query;
+  const matchCondition = req.user.role === 'Viewer' ? { userId: toObjectId(req.user._id) } : {};
 
   const result = await Expense.aggregate([
-    { $match: { userId: toObjectId(req.user._id) } },
+    { $match: matchCondition },
     {
       $group: {
         _id: "$category",
@@ -228,16 +244,21 @@ const getCategoryBreakdown = async (req, res) => {
 
 const getMonthlyTrends = async (req, res) => {
   const { year = new Date().getFullYear() } = req.query;
-
+  const matchCondition = req.user.role === 'Viewer' ? {
+    userId: toObjectId(req.user._id),
+    date: {
+      $gte: new Date(`${year}-01-01`),
+      $lte: new Date(`${year}-12-31`),
+    },
+  } : {
+    date: {
+      $gte: new Date(`${year}-01-01`),
+      $lte: new Date(`${year}-12-31`),
+    },
+  };
   const result = await Expense.aggregate([
     {
-      $match: {
-        userId: toObjectId(req.user._id),
-        date: {
-          $gte: new Date(`${year}-01-01`),
-          $lte: new Date(`${year}-12-31`),
-        },
-      },
+      $match: matchCondition
     },
     {
       $group: {
@@ -273,12 +294,10 @@ const getMonthlyTrends = async (req, res) => {
 
 const getExpenseByDateRange = async (req, res) => {
   const { from, to, type, category, sort = "date", order = "desc" } = req.query;
-  const filter = {
-    user: req.user._id,
-    date: {
-      $gte: new Date(from),
-      $lte: new Date(to)
-    },
+  const filter = req.user.role === 'Viewer' ? { userId: req.user._id } : {};
+  filter.date = {
+    $gte: new Date(from),
+    $lte: new Date(to)
   };
 
   if (type) filter.type = type;
@@ -306,17 +325,18 @@ const getExpenseByDateRange = async (req, res) => {
 
 
 const getBudgetOverview = async (req, res) => {
+  const matchCondition = req.user.role === 'Viewer' ? { userId: toObjectId(req.user._id) } : {};
   const [topCategories, highestExpense, recentActivity] = await Promise.all([
     Expense.aggregate([
-      { $match: { userId: toObjectId(req.user._id), type: "expense" } },
+      { $match: { ...matchCondition, type: "expense" } },
       { $group: { _id: "$category", total: { $sum: "$amount" } } },
       { $sort: { total: -1 } },
       { $limit: 5 },
     ]),
-    Expense.findOne({ userId: toObjectId(req.user._id) })
+    Expense.findOne(matchCondition)
       .sort({ amount: -1 })
       .lean(),
-    Expense.find({ userId: toObjectId(req.user._id) })
+    Expense.find(matchCondition)
       .sort({ createdAt: -1 })
       .limit(5)
       .lean(),
@@ -334,14 +354,32 @@ const getBudgetOverview = async (req, res) => {
 
 
 const exportAsCSV = async (req, res) => {
+  const { type, category, from, to } = req.query;
+  const userId = req.user._id;
 
-  const expenses = await Expense.find({ userId: toObjectId(req.user._id) })
+  const queryObj = req.user.role === 'Viewer' ? { userId } : {};
+
+  if (type) queryObj.type = type;
+  if (category) queryObj.category = category;
+  if (from || to) {
+    queryObj.date = {};
+    if (from) queryObj.date.$gte = new Date(from);
+    if (to) queryObj.date.$lte = new Date(to);
+  }
+
+  const expenses = await Expense.find(queryObj)
     .sort({ date: -1 })
     .lean();
   const header = "date,type,category,description,amount,currency\n";
-  const rows = expenses.map((e) =>
-    `${new Date(e.date).toISOString()},${e.type},${e.category},"${e.description}",${e.amount},${e.currency}`
-  ).join("\n");
+  const rows = expenses.map((e) => {
+    // This creates a format like "23 Mar 2026"
+    const formattedDate = new Intl.DateTimeFormat('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    }).format(new Date(e.date));
+    return `"${formattedDate}",${e.type},${e.category},"${e.description}",${e.amount},${e.currency || 'INR'}`;
+  }).join("\n");
   res.setHeader("Content-Type", "text/csv");
   res.setHeader("Content-Disposition", "attachment;filename=expenses.csv");
   res.send(header + rows);

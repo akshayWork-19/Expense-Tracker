@@ -16,7 +16,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import api from '@/services/api';
+
 import { toast } from 'sonner';
 
 
@@ -27,7 +29,10 @@ const AddTransactionDialog = ({ open, onOpenChange, onSuccess }) => {
         type: 'expense',
         category: 'other',
         date: new Date().toISOString().split('T')[0],
+        isRecurring: false,
+        recurringInterval: 'monthly',
     });
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -54,8 +59,11 @@ const AddTransactionDialog = ({ open, onOpenChange, onSuccess }) => {
                 amount: '',
                 type: 'expense',
                 category: 'other',
-                date: new Date().toISOString().split('T')[0]
+                date: new Date().toISOString().split('T')[0],
+                isRecurring: false,
+                recurringInterval: 'monthly'
             })
+
         } catch (error) {
             const errorMessage = error.response?.data?.message || 'Failed to add Transaction!';
             setError(errorMessage);
@@ -149,6 +157,38 @@ const AddTransactionDialog = ({ open, onOpenChange, onSuccess }) => {
                                 <Input id="date" type="date" required value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} />
                             </div>
                         </div>
+
+                        <div className="flex items-center justify-between p-3 border rounded-lg bg-slate-50/50 dark:bg-slate-900/50">
+                            <div className="space-y-0.5">
+                                <Label className="text-base">Recurring Transaction</Label>
+                                <p className="text-xs text-muted-foreground">Automatically add this transaction periodically</p>
+                            </div>
+                            <Switch
+                                checked={formData.isRecurring}
+                                onCheckedChange={(checked) => setFormData({ ...formData, isRecurring: checked })}
+                            />
+                        </div>
+
+                        {formData.isRecurring && (
+                            <div className="space-y-2 animate-in slide-in-from-top-2 duration-200">
+                                <Label htmlFor="interval">Interval</Label>
+                                <Select
+                                    value={formData.recurringInterval}
+                                    onValueChange={(value) => setFormData({ ...formData, recurringInterval: value })}
+                                >
+                                    <SelectTrigger id="interval">
+                                        <SelectValue placeholder="Select interval" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="daily">Daily</SelectItem>
+                                        <SelectItem value="weekly">Weekly</SelectItem>
+                                        <SelectItem value="monthly">Monthly</SelectItem>
+                                        <SelectItem value="yearly">Yearly</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+
                         <DialogFooter className="pt-4">
                             <Button type="submit" disabled={loading} className="w-full">
                                 {loading ? 'Adding...' : 'Add Transaction'}

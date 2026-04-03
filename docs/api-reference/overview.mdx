@@ -1,0 +1,17 @@
+---
+title: "API Overview"
+description: "How to use the Expense Tracker API Playground"
+---
+
+## Authentication
+
+All `GET/POST/PUT/DELETE` requests to `/api/expense` require a **Bearer Token**.
+
+### 1. Identify Yourself
+When testing, check your `role` in the profile response.
+
+### 2. Global Analytics
+Endpoints like `/api/expense/getSummary` or `/api/expense/getMonthlyTrends` will automatically return **global datasets** if you are logged in as an `Analyst` or `Admin`. Otherwise, they will only show your own data.
+
+### 3. CSV Export
+You can use the `/api/expense/export/csv` endpoint to download your transaction history as a standard CSV file for your own records.

@@ -1,0 +1,29 @@
+---
+title: Welcome to Expense Tracker API
+description: Your guide to the Finance Dashboard backend.
+---
+
+## Overview
+
+The Expense Tracker API is a secure financial management system. It supports **Role-Based Access Control (RBAC)**, ensuring that sensitive data is only accessible to authorized roles.
+
+### User Roles
+
+- **Viewer**: Read/Write their own data.
+- **Analyst**: Read-only global access (summaries/trends).
+- **Admin**: Full system management (Users & Records).
+
+## Getting Started
+
+To use the interactive playground, you will need a JWT Token.
+
+1. **Register**: Use the `POST /api/auth/register` endpoint.
+2. **Login**: Use the `POST /api/auth/login` endpoint with your credentials.
+3. **Authorize**: Copy the `token` from the login response and paste it into the **"Authorize"** button at the top of the API Reference section.
+
+### Security Features
+
+Our API is hardened with:
+- **Rate Limiting**: 100 requests per 15 minutes.
+- **NoSQL Injection Guard**: Using `express-mongo-sanitize`.
+- **Security Headers**: Powered by `helmet.js`.

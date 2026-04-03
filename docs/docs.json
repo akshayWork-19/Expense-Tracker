@@ -1,0 +1,33 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "palm",
+  "name": "Expense Tracker API",
+  "colors": {
+    "primary": "#3498db",
+    "light": "#5dade2",
+    "dark": "#2e86c1"
+  },
+  "favicon": "https://mintlify.com/favicon.png",
+  "navigation": {
+    "groups": [
+      {
+        "group": "Getting Started",
+        "pages": [
+          "introduction"
+        ]
+      },
+      {
+        "group": "API Reference",
+        "pages": [
+          "api-reference/overview"
+        ]
+      }
+    ]
+  },
+  "api": {
+    "openapi": "openapi.json",
+    "mdx": {
+      "server": "http://localhost:8000"
+    }
+  }
+}

@@ -19,17 +19,18 @@ const COLORS = [
     '#475569', // slate-600
 ];
 
-const CategoryPieChart = ({ transactions }) => {
-    const expenseData = transactions.filter((t) => t.type === 'expense').reduce((acc, curr) => {
-        const existing = acc.find((item) => item.name === curr.category);
-        if (existing) {
-            existing.value += curr.amount;
-        } else {
-            acc.push({ name: curr.category, value: curr.amount });
-        }
-        return acc;
-    }, []);
+const CategoryPieChart = ({ categoryData }) => {
+    // const expenseData = transactions.filter((t) => t.type === 'expense').reduce((acc, curr) => {
+    //     const existing = acc.find((item) => item.name === curr.category);
+    //     if (existing) {
+    //         existing.value += curr.amount;
+    //     } else {
+    //         acc.push({ name: curr.category, value: curr.amount });
+    //     }
+    //     return acc;
+    // }, []);
 
+    const expenseData = categoryData ? categoryData.map(d => ({ name: d.category, value: d.total })) : [];
     if (expenseData.length === 0) return (
         <Card className="h-full">
             <CardHeader><CardTitle className="text-lg font-bold">Expense Breakdown</CardTitle></CardHeader>
