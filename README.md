@@ -85,6 +85,17 @@ backend/
 
 ---
 
+## 🚧 Roadmap & Frontend Integration
+
+While the backend is a **fully functional RBAC system**, the frontend dashboard is currently being updated to take full advantage of these new enterprise features:
+1. **Handling 403 Forbidden**: Implementing graceful UI feedback when a user attempts an unauthorized role action.
+2. **Automated Role-Based Views**: Updating Recharts components to automatically toggle between personal and global data for Analysts/Admins.
+3. **User Management Interface**: Developing a dedicated Admin panel for managing system-wide user roles and account statuses.
+
+**For the most accurate view of the system's logic and data structures, please refer to the [Interactive API Documentation](http://localhost:8000/) on the home route.**
+
+---
+
 ## 🔧 Getting Started
 
 1. **Clone & Install**:
