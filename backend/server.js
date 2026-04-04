@@ -22,20 +22,22 @@ const PORT = process.env.PORT || 4000;
 app.use(cors({
     origin: (origin, callback) => {
         const allowed = [
-            process.env.FRONTEND_URL,       // e.g. https://expense-tracker.vercel.app
-            'http://localhost:5173',         // local Vite dev server
-            'http://localhost:4173',         // local Vite preview server
-        ].filter(Boolean);                  // remove undefined if FRONTEND_URL not set
+            process.env.FRONTEND_URL?.replace(/\/$/, ''), // strip trailing slash if present
+            'http://localhost:5173',
+            'http://localhost:4173',
+        ].filter(Boolean);
 
-        // Allow server-to-server requests (no origin header) and listed origins
         if (!origin || allowed.includes(origin)) {
             callback(null, true);
         } else {
+            console.warn(`CORS blocked origin: ${origin}`);
+            console.warn(`Allowed origins: ${allowed.join(', ')}`);
             callback(new Error(`CORS blocked: ${origin}`));
         }
     },
     credentials: true,
 }));
+
 
 app.use(express.json({ limit: '10kb' })); // Body parser, limiting data size
 
