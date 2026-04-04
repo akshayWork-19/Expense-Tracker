@@ -5,6 +5,7 @@ import Register from './pages/Register';
 import { Button } from '@/components/ui/button';
 import { useAuth } from './context/AuthContext';
 import { Toaster } from './components/ui/sonner';
+import { Analytics } from "@vercel/analytics/react"
 
 function App() {
   // const [activeTab, setActiveTab] = useState('dashboard');
@@ -98,6 +99,8 @@ function App() {
       {/* Move Toaster here so it's always available */}
       {/* Also fixed 'richColors' casing */}
       <Toaster position="top-right" />
+      <Analytics />
+
     </>
   );
 }
