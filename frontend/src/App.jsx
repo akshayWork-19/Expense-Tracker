@@ -11,6 +11,20 @@ function App() {
   // const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [view, setView] = useState('login');
   const { user, logout, loading, isAuthenticated } = useAuth();
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const saved = localStorage.getItem('theme');
+    return saved ? saved === 'dark' : true; // Default to dark for comfort
+  });
+
+  React.useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDarkMode]);
 
   const renderContent = () => {
     if (loading) {
@@ -33,25 +47,40 @@ function App() {
 
 
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
-        <nav className="bg-white border-b border-slate-200 sticky top-0 z-10">
+      <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
+        <nav className="bg-card border-b border-border sticky top-0 z-10 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-bold">
-                E
-              </div>
-              <span className="text-xl font-bold tracking-tight">ExpenseTrack</span>
+            <div className="flex items-center gap-3">
+              <span className="text-xl font-semibold tracking-tight text-foreground">
+                ExpenseTracker
+              </span>
             </div>
 
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-muted-foreground">
-                Hey, {user?.username}
-              </span>
-
-              <Button onClick={logout}>
-                Log out
+            <div className="flex items-center gap-6">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsDarkMode(!isDarkMode)}
+                className="rounded-full w-10 h-10 hover:bg-muted"
+                title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              >
+                {isDarkMode ? (
+                  <span className="text-xl">🌙</span>
+                ) : (
+                  <span className="text-xl">☀️</span>
+                )}
               </Button>
 
+              <div className="h-6 w-[1px] bg-border hidden md:block"></div>
+
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-muted-foreground hidden sm:inline">
+                  {user?.username}
+                </span>
+                <Button variant="secondary" size="sm" onClick={logout} className="font-semibold">
+                  Sign Out
+                </Button>
+              </div>
             </div>
           </div>
         </nav>

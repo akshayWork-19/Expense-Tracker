@@ -53,29 +53,29 @@ const TrendsChart = ({ transactions }) => {
                                 <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
                             </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" opacity={0.1} />
                         <XAxis
                             dataKey="date"
                             axisLine={false}
                             tickLine={false}
-                            tick={{ fill: '#64748b', fontSize: 12 }}
+                            tick={{ fill: 'currentColor', fontSize: 12, opacity: 0.5 }}
                             dy={10}
                         />
                         <YAxis
                             axisLine={false}
                             tickLine={false}
-                            tick={{ fill: '#64748b', fontSize: 12 }}
+                            tick={{ fill: 'currentColor', fontSize: 12, opacity: 0.5 }}
                             tickFormatter={(value) => `$${value}`}
                         />
                         <Tooltip
                             contentStyle={{
-                                backgroundColor: '#000',
-                                border: 'none',
-                                borderRadius: '8px',
-                                color: '#fff',
+                                backgroundColor: 'var(--card)',
+                                border: '1px solid var(--border)',
+                                borderRadius: '12px',
+                                color: 'var(--foreground)',
                                 fontSize: '12px'
                             }}
-                            itemStyle={{ color: '#fff' }}
+                            itemStyle={{ color: 'var(--primary)' }}
                         />
                         <Legend verticalAlign="top" align="right" height={36} />
                         <Area

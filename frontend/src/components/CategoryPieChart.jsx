@@ -10,13 +10,13 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const COLORS = [
-    '#0f172a', // slate-900
-    '#334155', // slate-700
-    '#64748b', // slate-500
-    '#94a3b8', // slate-400
-    '#cbd5e1', // slate-300
-    '#1e293b', // slate-800
-    '#475569', // slate-600
+    '#10b981', // Emerald
+    '#6366f1', // Indigo
+    '#f59e0b', // Amber
+    '#ec4899', // Pink
+    '#06b6d4', // Cyan
+    '#8b5cf6', // Violet
+    '#f97316', // Orange
 ];
 
 const CategoryPieChart = ({ categoryData }) => {
@@ -66,16 +66,16 @@ const CategoryPieChart = ({ categoryData }) => {
                             </Pie>
                             <Tooltip
                                 contentStyle={{
-                                    backgroundColor: '#000',
-                                    border: 'none',
+                                    backgroundColor: 'var(--card)',
+                                    border: '1px solid var(--border)',
                                     borderRadius: '8px',
-                                    color: '#fff',
+                                    color: 'var(--foreground)',
                                     fontSize: '12px'
                                 }}
-                                itemStyle={{ color: '#fff' }}
+                                itemStyle={{ color: 'var(--foreground)' }}
                                 formatter={(value) => `$${value.toFixed(2)}`}
                             />
-                            <Legend verticalAlign="bottom" height={36} />
+                            <Legend verticalAlign="bottom" height={36} wrapperStyle={{ color: 'var(--foreground)' }} />
                         </PieChart>
                     </ResponsiveContainer>
                 </div>

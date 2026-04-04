@@ -15,6 +15,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { buttonVariants } from '@/components/ui/button';
 import { toast } from 'sonner';
+import TransactionDetailsDialog from '@/components/TransactionDetailsDialog';
 
 
 const Dashboard = () => {
@@ -28,9 +29,19 @@ const Dashboard = () => {
     });
     const [openFrom, setOpenFrom] = useState(false);
     const [openTo, setOpenTo] = useState(false);
-
     const [globalSummary, setGlobalSummary] = useState(null);
     const [categorySummary, setCategorySummary] = useState([]);
+    const [selectedIds, setSelectedIds] = useState([]);
+    const [budgetOverview, setBudgetOverview] = useState(null);
+    const [detailTransaction, setDetailTransaction] = useState(null);
+    const [isDetailOpen, setIsDetailOpen] = useState(false);
+
+
+
+    const handleRowClick = (transaction) => {
+        setDetailTransaction(transaction);
+        setIsDetailOpen(true);
+    };
 
     const refreshData = useCallback(async () => {
         await Promise.all([
@@ -42,9 +53,10 @@ const Dashboard = () => {
     const fetchGlobalData = async () => {
         try {
             setLoading(true);
-            const [sumRes, catRes] = await Promise.all([api.get('/expense/getSummary'), api.get('/expense/getCategoryBreakdown?type=expense')]);
+            const [sumRes, catRes, budgetRes] = await Promise.all([api.get('/expense/getSummary'), api.get('/expense/getCategoryBreakdown?type=expense'), api.get('/expense/getBudgetOverview')]);
             setGlobalSummary(sumRes.data.summary);
             setCategorySummary(catRes.data.data);
+            setBudgetOverview(budgetRes.data.data);
             setError('')
         } catch (error) {
             console.error("Failed to load global stats", error);
@@ -52,6 +64,21 @@ const Dashboard = () => {
             setLoading(false);
         }
     }
+
+
+    const handleBulkDelete = async () => {
+        if (!window.confirm(`Are your sure you want to delete ${selectedIds.length} transactions?`)) return;
+        try {
+            await api.post('/expense/bulk-delete', { ids: selectedIds });
+            toast.success(`${selectedIds.length} transactions deleted!`);
+            setSelectedIds([]);
+            refreshData();
+        } catch (error) {
+            toast.error("Failed to delete transactions :", error.message);
+        }
+    }
+
+
 
     const fetchFilteredTransactions = useCallback(async () => {
         try {
@@ -118,7 +145,7 @@ const Dashboard = () => {
         <div className='space-y-8 animate-in fade-in duration-500'>
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                    <h1 className="text-2xl font-semibold text-foreground tracking-tight">
                         Financial Overview
                     </h1>
                 </div>
@@ -136,7 +163,7 @@ const Dashboard = () => {
                     </CardHeader>
                     <CardContent>
                         <CardContent>
-                            <p className={`text-3xl font-black ${globalSummary?.net || 0 ? 'text-primary' : 'text-destructive'}`}>
+                            <p className={`text-3xl font-semibold ${globalSummary?.net || 0 ? 'text-primary' : 'text-destructive'}`}>
                                 ${globalSummary?.net?.toFixed(2) || "0.00"}
                             </p>
                         </CardContent>
@@ -150,7 +177,7 @@ const Dashboard = () => {
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-3xl font-black text-foreground">
+                        <p className="text-3xl font-semibold text-foreground">
                             ${totalIncome.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </p>
                     </CardContent>
@@ -163,7 +190,7 @@ const Dashboard = () => {
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-3xl font-black text-foreground">
+                        <p className="text-3xl font-semibold text-foreground">
                             ${totalExpense.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </p>
                     </CardContent>
@@ -182,7 +209,7 @@ const Dashboard = () => {
                 {/* Transactions table */}
 
                 <div className='lg:col-span-2' >
-                    <div className="p-4 border-b border-border flex flex-wrap gap-4 items-center bg-slate-50/50 dark:bg-slate-900/50">
+                    <div className="p-4 border-b border-border flex flex-wrap gap-4 items-center bg-muted/30 dark:bg-muted/10 rounded-t-xl">
                         <Select value={filters.type} onValueChange={(v) => setFilters(prev => ({ ...prev, type: v === 'all' ? '' : v }))}>
                             <SelectTrigger className="w-[150px]">
                                 <SelectValue placeholder="All Types">
@@ -291,6 +318,11 @@ const Dashboard = () => {
                             )}
 
                             <CardAction>
+                                {selectedIds.length > 0 && (
+                                    <Button variant='destructive' size='lg' className="mr-4 animate-in fade-in zoom-in duration-200" onClick={handleBulkDelete}>
+                                        Delete Selected ({selectedIds.length})
+                                    </Button>
+                                )}
                                 <Button variant="outline" size="lg" className='mr-4' onClick={handleExportCSV}>
                                     Export CSV
                                 </Button>
@@ -304,6 +336,16 @@ const Dashboard = () => {
                             <Table>
                                 <TableHeader>
                                     <TableRow>
+                                        <TableHead>
+                                            <input
+                                                type="checkbox"
+                                                className="h-4 w-4 rounded border-gray-300"
+                                                checked={selectedIds.length === transactions.length && transactions.length > 0}
+                                                onChange={(e) => {
+                                                    setSelectedIds(e.target.checked ? transactions.map(t => t._id) : []);
+                                                }}
+                                            />
+                                        </TableHead>
                                         <TableHead>Description</TableHead>
                                         <TableHead>Category</TableHead>
                                         <TableHead>Date</TableHead>
@@ -313,7 +355,22 @@ const Dashboard = () => {
 
                                 <TableBody>
                                     {transactions.map((t) => (
-                                        <TableRow key={t._id}>
+                                        <TableRow key={t._id} className={`${selectedIds.includes(t._id) ? "bg-muted/50" : "hover:bg-muted/20"} cursor-pointer transition-colors`}
+                                            onClick={() => handleRowClick(t)}>
+                                            <TableCell>
+                                                <input
+                                                    type="checkbox"
+                                                    className="h-4 w-4 rounded border-gray-300"
+                                                    checked={selectedIds.includes(t._id)}
+                                                    onChange={(e) => {
+                                                        setSelectedIds(prev =>
+                                                            e.target.checked
+                                                                ? [...prev, t._id]
+                                                                : prev.filter(id => id !== t._id)
+                                                        );
+                                                    }}
+                                                />
+                                            </TableCell>
                                             <TableCell className="font-semibold">
                                                 {t.description}
                                             </TableCell>
@@ -339,6 +396,12 @@ const Dashboard = () => {
             </div>
 
             <AddTransactionDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} onSuccess={refreshData} />
+            <TransactionDetailsDialog
+                transaction={detailTransaction}
+                open={isDetailOpen}
+                onOpenChange={setIsDetailOpen}
+            />
+
         </div >
     )
 }

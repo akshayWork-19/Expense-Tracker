@@ -20,6 +20,7 @@ import { Switch } from "@/components/ui/switch";
 import api from '@/services/api';
 
 import { toast } from 'sonner';
+import { Textarea } from './ui/textarea';
 
 
 const AddTransactionDialog = ({ open, onOpenChange, onSuccess }) => {
@@ -31,6 +32,9 @@ const AddTransactionDialog = ({ open, onOpenChange, onSuccess }) => {
         date: new Date().toISOString().split('T')[0],
         isRecurring: false,
         recurringInterval: 'monthly',
+        note: '',
+        tags: '',
+        currency: 'INR'
     });
 
     const [loading, setLoading] = useState(false);
@@ -47,10 +51,12 @@ const AddTransactionDialog = ({ open, onOpenChange, onSuccess }) => {
         setLoading(true);
         setError('');
         try {
-            await api.post('/expense/create', {
+            const payload = {
                 ...formData,
                 amount: parseFloat(formData.amount),
-            })
+                tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()) : []
+            };
+            await api.post('/expense/create', payload);
             onSuccess();
             onOpenChange(false);
             toast.success("Transaction added successfully!")
@@ -167,6 +173,17 @@ const AddTransactionDialog = ({ open, onOpenChange, onSuccess }) => {
                                 checked={formData.isRecurring}
                                 onCheckedChange={(checked) => setFormData({ ...formData, isRecurring: checked })}
                             />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="note">Notes</Label>
+                            <Textarea id="note" value={formData.note} onChange={(e) => setFormData({ ...formData, note: e.target.value })}
+                                className="bg-slate-100" placeholder="Additional notes" />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="tags">Tags</Label>
+                            <Input id="tags" value={formData.tags} onChange={(e) => setFormData({ ...formData, tags: e.target.value })} placeholder="travel, food, work" />
                         </div>
 
                         {formData.isRecurring && (

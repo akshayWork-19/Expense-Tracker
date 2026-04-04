@@ -20,9 +20,23 @@ const PORT = process.env.PORT || 4000;
 // app.use(helmet()); // Set security HTTP headers
 // app.use(mongoSanitize()); // Data sanitization against NoSQL query injection
 app.use(cors({
-    origin: "http://localhost:5173",
-    credentials: true
+    origin: (origin, callback) => {
+        const allowed = [
+            process.env.FRONTEND_URL,       // e.g. https://expense-tracker.vercel.app
+            'http://localhost:5173',         // local Vite dev server
+            'http://localhost:4173',         // local Vite preview server
+        ].filter(Boolean);                  // remove undefined if FRONTEND_URL not set
+
+        // Allow server-to-server requests (no origin header) and listed origins
+        if (!origin || allowed.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error(`CORS blocked: ${origin}`));
+        }
+    },
+    credentials: true,
 }));
+
 app.use(express.json({ limit: '10kb' })); // Body parser, limiting data size
 
 // Rate Limiting
