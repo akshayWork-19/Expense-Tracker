@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import api from '@/services/api';
+import api, { registerLogoutHandler } from '@/services/api';
 import { toast } from 'sonner';
 
 
@@ -10,12 +10,21 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        // Register logout handler for 401s
+        registerLogoutHandler(() => {
+            logout();
+            toast.error("Session expired. Please log in again.");
+        });
+
         const token = localStorage.getItem('token');
 
         if (token) {
             api.get('/auth/profile')
                 .then(res => setUser(res.data.user))
-                .catch(() => localStorage.removeItem('token'))
+                .catch(() => {
+                    localStorage.removeItem('token');
+                    setUser(null);
+                })
                 .finally(() => setLoading(false))
         } else {
             setLoading(false);

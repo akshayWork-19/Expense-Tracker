@@ -10,13 +10,11 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const COLORS = [
-    '#10b981', // Emerald
-    '#6366f1', // Indigo
-    '#f59e0b', // Amber
-    '#ec4899', // Pink
-    '#06b6d4', // Cyan
-    '#8b5cf6', // Violet
-    '#f97316', // Orange
+    'var(--chart-1)',
+    'var(--chart-2)',
+    'var(--chart-3)',
+    'var(--chart-4)',
+    'var(--chart-5)',
 ];
 
 const CategoryPieChart = ({ categoryData }) => {
